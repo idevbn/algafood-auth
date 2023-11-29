@@ -1,8 +1,8 @@
 package com.algaworks.algafood.auth;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -13,8 +13,7 @@ import org.springframework.security.oauth2.config.annotation.web.configurers.Aut
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerSecurityConfigurer;
 import org.springframework.security.oauth2.provider.CompositeTokenGranter;
 import org.springframework.security.oauth2.provider.TokenGranter;
-import org.springframework.security.oauth2.provider.token.TokenStore;
-import org.springframework.security.oauth2.provider.token.store.redis.RedisTokenStore;
+import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
 
 import java.util.Arrays;
 import java.util.List;
@@ -26,17 +25,14 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final UserDetailsService userDetailsService;
-    private final RedisConnectionFactory redisConnectionFactory;
 
     @Autowired
     public AuthorizationServerConfig(final PasswordEncoder passwordEncoder,
                                      final AuthenticationManager authenticationManager,
-                                     final UserDetailsService userDetailsService,
-                                     final RedisConnectionFactory redisConnectionFactory) {
+                                     final UserDetailsService userDetailsService) {
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
         this.userDetailsService = userDetailsService;
-        this.redisConnectionFactory = redisConnectionFactory;
     }
 
     @Override
@@ -86,8 +82,8 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
         endpoints
                 .authenticationManager(this.authenticationManager)
                 .userDetailsService(this.userDetailsService)
-                .tokenGranter(this.tokenGranter(endpoints))
-                .tokenStore(this.redisTokenStore());
+                .accessTokenConverter(this.jwtAccessTokenConverter())
+                .tokenGranter(this.tokenGranter(endpoints));
         /**
          * Com essa configuração, o mesmo refresh_token não gera outros access_token
          *  o default é true
@@ -95,8 +91,14 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
 //                .reuseRefreshTokens(false);
     }
 
-    private TokenStore redisTokenStore() {
-        return new RedisTokenStore(this.redisConnectionFactory);
+    @Bean
+    public JwtAccessTokenConverter jwtAccessTokenConverter() {
+        final JwtAccessTokenConverter jwtAccessTokenConverter
+                = new JwtAccessTokenConverter();
+
+        jwtAccessTokenConverter.setSigningKey("algaworks");
+
+        return jwtAccessTokenConverter;
     }
 
     private TokenGranter tokenGranter(final AuthorizationServerEndpointsConfigurer endpoints) {
