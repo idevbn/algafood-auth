@@ -3,6 +3,7 @@ package com.algaworks.algafood.auth;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -14,7 +15,9 @@ import org.springframework.security.oauth2.config.annotation.web.configurers.Aut
 import org.springframework.security.oauth2.provider.CompositeTokenGranter;
 import org.springframework.security.oauth2.provider.TokenGranter;
 import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
+import org.springframework.security.oauth2.provider.token.store.KeyStoreKeyFactory;
 
+import java.security.KeyPair;
 import java.util.Arrays;
 import java.util.List;
 
@@ -96,7 +99,16 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
         final JwtAccessTokenConverter jwtAccessTokenConverter
                 = new JwtAccessTokenConverter();
 
-        jwtAccessTokenConverter.setSigningKey("aa27b16ae5be4cdf90d9c37a35f9298a");
+//        jwtAccessTokenConverter.setSigningKey("aa27b16ae5be4cdf90d9c37a35f9298a");
+        final ClassPathResource jksResource = new ClassPathResource("keystores/algafood.jks");
+        final String keyStorePass = "123456";
+        final String keyPairAlias = "algafood";
+
+        final KeyStoreKeyFactory keyStoreKeyFactory
+                = new KeyStoreKeyFactory(jksResource, keyStorePass.toCharArray());
+        final KeyPair keyPair = keyStoreKeyFactory.getKeyPair(keyPairAlias);
+
+        jwtAccessTokenConverter.setKeyPair(keyPair);
 
         return jwtAccessTokenConverter;
     }
