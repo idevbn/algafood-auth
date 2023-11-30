@@ -28,14 +28,17 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final UserDetailsService userDetailsService;
+    private final JwtKeyStoreProperties jwtKeyStoreProperties;
 
     @Autowired
     public AuthorizationServerConfig(final PasswordEncoder passwordEncoder,
                                      final AuthenticationManager authenticationManager,
-                                     final UserDetailsService userDetailsService) {
+                                     final UserDetailsService userDetailsService,
+                                     final JwtKeyStoreProperties jwtKeyStoreProperties) {
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
         this.userDetailsService = userDetailsService;
+        this.jwtKeyStoreProperties = jwtKeyStoreProperties;
     }
 
     @Override
@@ -100,13 +103,16 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
                 = new JwtAccessTokenConverter();
 
 //        jwtAccessTokenConverter.setSigningKey("aa27b16ae5be4cdf90d9c37a35f9298a");
-        final ClassPathResource jksResource = new ClassPathResource("keystores/algafood.jks");
-        final String keyStorePass = "123456";
-        final String keyPairAlias = "algafood";
+
+        final String path = this.jwtKeyStoreProperties.getPath();
+        final String password = this.jwtKeyStoreProperties.getPassword();
+        final String pairAlias = this.jwtKeyStoreProperties.getKeyPairAlias();
+
+        final ClassPathResource jksResource = new ClassPathResource(path);
 
         final KeyStoreKeyFactory keyStoreKeyFactory
-                = new KeyStoreKeyFactory(jksResource, keyStorePass.toCharArray());
-        final KeyPair keyPair = keyStoreKeyFactory.getKeyPair(keyPairAlias);
+                = new KeyStoreKeyFactory(jksResource, password.toCharArray());
+        final KeyPair keyPair = keyStoreKeyFactory.getKeyPair(pairAlias);
 
         jwtAccessTokenConverter.setKeyPair(keyPair);
 
