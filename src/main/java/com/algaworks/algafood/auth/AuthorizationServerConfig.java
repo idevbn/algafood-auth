@@ -80,6 +80,7 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
          * Com o permitAll() não é necessário autenticar o usuário
          */
         security.checkTokenAccess("permitAll()")
+                .tokenKeyAccess("permitAll()")
                 .allowFormAuthenticationForClients();
     }
 
