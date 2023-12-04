@@ -14,6 +14,9 @@ import org.springframework.security.oauth2.config.annotation.web.configurers.Aut
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerSecurityConfigurer;
 import org.springframework.security.oauth2.provider.CompositeTokenGranter;
 import org.springframework.security.oauth2.provider.TokenGranter;
+import org.springframework.security.oauth2.provider.approval.ApprovalStore;
+import org.springframework.security.oauth2.provider.approval.TokenApprovalStore;
+import org.springframework.security.oauth2.provider.token.TokenStore;
 import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
 import org.springframework.security.oauth2.provider.token.store.KeyStoreKeyFactory;
 
@@ -90,6 +93,7 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
                 .authenticationManager(this.authenticationManager)
                 .userDetailsService(this.userDetailsService)
                 .accessTokenConverter(this.jwtAccessTokenConverter())
+                .approvalStore(this.approvalStore(endpoints.getTokenStore()))
                 .tokenGranter(this.tokenGranter(endpoints));
         /**
          * Com essa configuração, o mesmo refresh_token não gera outros access_token
@@ -118,6 +122,14 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
         jwtAccessTokenConverter.setKeyPair(keyPair);
 
         return jwtAccessTokenConverter;
+    }
+
+    private ApprovalStore approvalStore(final TokenStore tokenStore) {
+        final TokenApprovalStore approvalStore = new TokenApprovalStore();
+
+        approvalStore.setTokenStore(tokenStore);
+
+        return approvalStore;
     }
 
     private TokenGranter tokenGranter(final AuthorizationServerEndpointsConfigurer endpoints) {
