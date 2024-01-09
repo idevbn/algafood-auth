@@ -61,7 +61,7 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
 //                .secret(this.passwordEncoder.encode("food123"))
                 .secret(this.passwordEncoder.encode(""))
                 .authorizedGrantTypes("authorization_code")
-                .scopes("write", "read")
+                .scopes("WRITE", "READ")
 //                    .redirectUris("http://aplicacao-cliente")
                 .redirectUris("http://localhost:8082")
 
@@ -69,7 +69,7 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
                 .withClient("faturamento")
                 .secret(this.passwordEncoder.encode("faturamento123"))
                 .authorizedGrantTypes("client_credentials")
-                .scopes("read")
+                .scopes("READ")
 
                 .and()
                 .withClient("checktoken")
