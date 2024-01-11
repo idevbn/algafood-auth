@@ -6,7 +6,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.config.annotation.configurers.ClientDetailsServiceConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configuration.AuthorizationServerConfigurerAdapter;
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableAuthorizationServer;
@@ -21,6 +20,7 @@ import org.springframework.security.oauth2.provider.token.TokenStore;
 import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
 import org.springframework.security.oauth2.provider.token.store.KeyStoreKeyFactory;
 
+import javax.sql.DataSource;
 import java.security.KeyPair;
 import java.util.Arrays;
 import java.util.List;
@@ -29,51 +29,25 @@ import java.util.List;
 @EnableAuthorizationServer
 public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdapter {
 
-    private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final UserDetailsService userDetailsService;
     private final JwtKeyStoreProperties jwtKeyStoreProperties;
+    private final DataSource dataSource;
 
     @Autowired
-    public AuthorizationServerConfig(final PasswordEncoder passwordEncoder,
-                                     final AuthenticationManager authenticationManager,
+    public AuthorizationServerConfig(final AuthenticationManager authenticationManager,
                                      final UserDetailsService userDetailsService,
-                                     final JwtKeyStoreProperties jwtKeyStoreProperties) {
-        this.passwordEncoder = passwordEncoder;
+                                     final JwtKeyStoreProperties jwtKeyStoreProperties,
+                                     final DataSource dataSource) {
         this.authenticationManager = authenticationManager;
         this.userDetailsService = userDetailsService;
         this.jwtKeyStoreProperties = jwtKeyStoreProperties;
+        this.dataSource = dataSource;
     }
 
     @Override
     public void configure(final ClientDetailsServiceConfigurer clients) throws Exception {
-        clients
-                .inMemory()
-                .withClient("algafood-web")
-                .secret(this.passwordEncoder.encode("web123"))
-                .authorizedGrantTypes("password", "refresh_token")
-                .scopes("WRITE", "READ")
-                .accessTokenValiditySeconds(60 * 60 * 6) // 6 horas (padrão é 12 horas)
-                .refreshTokenValiditySeconds(15 * 60 * 60) // refresh_token de 15 dias
-
-                .and()
-                .withClient("foodanalytics")
-//                .secret(this.passwordEncoder.encode("food123"))
-                .secret(this.passwordEncoder.encode(""))
-                .authorizedGrantTypes("authorization_code")
-                .scopes("WRITE", "READ")
-//                    .redirectUris("http://aplicacao-cliente")
-                .redirectUris("http://localhost:8082")
-
-                .and()
-                .withClient("faturamento")
-                .secret(this.passwordEncoder.encode("faturamento123"))
-                .authorizedGrantTypes("client_credentials")
-                .scopes("READ")
-
-                .and()
-                .withClient("checktoken")
-                .secret(this.passwordEncoder.encode("check123"));
+        clients.jdbc(this.dataSource);
     }
 
     @Override
